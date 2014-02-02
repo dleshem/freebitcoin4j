@@ -4,13 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
-public class ManualRecaptchaSolver implements RecaptchaSolver {
-	private final RecaptchaClient recaptcha;
-	
-	public ManualRecaptchaSolver(RecaptchaClient recaptcha) {
-		this.recaptcha = recaptcha;
-	}
-	
+public class ManualCaptchaSolver implements CaptchaSolver {
 	private static final InputStream nonClosableSystemIn = new InputStream() {
 		@Override
 		public int read(byte[] b) throws IOException {
@@ -54,8 +48,8 @@ public class ManualRecaptchaSolver implements RecaptchaSolver {
 	};
 	
 	@Override
-	public String solve(String challenge) {
-		System.out.print("Solve: " + recaptcha.getImageUrl(challenge));
+	public String solve(String imageUrl) {
+		System.out.print("Solve: " + imageUrl);
 		
         final Scanner scanner = new Scanner(nonClosableSystemIn);
         try {

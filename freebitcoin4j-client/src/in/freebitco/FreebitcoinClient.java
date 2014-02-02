@@ -5,10 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import net.recaptcha.RecaptchaClient;
 import net.recaptcha.RecaptchaClient.Endpoint;
-import net.recaptcha.RecaptchaSolver;
+import net.recaptcha.CaptchaSolver;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -25,21 +26,21 @@ public class FreebitcoinClient {
 	private final HttpRequestFactory requestFactory;
 	private final Integer connectTimeout;
 	private final Integer readTimeout;
-	private final RecaptchaSolver recaptchaSolver;
+	private final CaptchaSolver captchaSolver;
 	private final RecaptchaClient recaptcha;
 	
 	public FreebitcoinClient(HttpRequestFactory requestFactory, Integer connectTimeout, Integer readTimeout,
-			RecaptchaSolver recaptchaSolver) {
+			CaptchaSolver captchaSolver) {
 		this.requestFactory = requestFactory;
 		this.connectTimeout = connectTimeout;
 		this.readTimeout = readTimeout;
-		this.recaptchaSolver = recaptchaSolver;
+		this.captchaSolver = captchaSolver;
 		recaptcha = new RecaptchaClient(requestFactory, connectTimeout, readTimeout, Endpoint.HTTPS);
 	}
 	
 	public String login(String btcAddress, String password) throws IOException, FreebitcoinException {
 		final String recaptchaChallenge = recaptcha.createChallenge(RECAPTCHA_PUBLIC_KEY);
-		final String recaptchaResponse = recaptchaSolver.solve(recaptchaChallenge);
+		final String recaptchaResponse = captchaSolver.solve(recaptcha.getImageUrl(recaptchaChallenge));
 		
 		final Map<String, String> params = new HashMap<String, String>();
 		params.put("op", "login");
@@ -70,15 +71,28 @@ public class FreebitcoinClient {
 		}
 	}
 	
+	private static final Random rand = new Random();
+	
+	/** @see https://github.com/carlo/jquery-browser-fingerprint */
+	private static String randomFingerprint() {
+		final StringBuilder builder = new StringBuilder();
+		
+		for (int i = 0; i < 32; ++i) {
+			builder.append(Integer.toString(rand.nextInt(16), 16));
+		}
+		
+		return builder.toString();
+	}
+	
 	public FreePlayResult freePlay(String btcAddress, String token) throws IOException, FreebitcoinException {
 		final String recaptchaChallenge = recaptcha.createChallenge(RECAPTCHA_PUBLIC_KEY);
-		final String recaptchaResponse = recaptchaSolver.solve(recaptchaChallenge);
+		final String recaptchaResponse = captchaSolver.solve(recaptcha.getImageUrl(recaptchaChallenge));
 		
 		final Map<String, String> params = new HashMap<String, String>();
 		params.put("op", "free_play");
 		params.put("recaptcha_challenge_field", recaptchaChallenge);
 		params.put("recaptcha_response_field", recaptchaResponse);
-		params.put("fingerprint", "ba30460c0b6b2a7ce16d88563a2287d7");
+		params.put("fingerprint", randomFingerprint());
 		
 		final HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(ENDPOINT), new UrlEncodedContent(params));
 		if (connectTimeout != null) {

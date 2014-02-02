@@ -1,10 +1,8 @@
 package in.freebitco;
 
 import static org.junit.Assert.*;
-import net.recaptcha.ManualRecaptchaSolver;
-import net.recaptcha.RecaptchaClient;
-import net.recaptcha.RecaptchaSolver;
-import net.recaptcha.RecaptchaClient.Endpoint;
+import net.recaptcha.ManualCaptchaSolver;
+import net.recaptcha.CaptchaSolver;
 
 import org.junit.Test;
 
@@ -13,20 +11,19 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 
 public class FreebitcoinClientTest {
 	private static final HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-	private static final RecaptchaClient recaptcha = new RecaptchaClient(requestFactory, 5000, 5000, Endpoint.HTTPS);
 	
 	// TODO: change to real values
 	private static final String BITCOIN_ADDRESS = "XXX";
 	private static final String PASSWORD = "XXX";
 	private static final String TOKEN = "XXX";
 	
-	private static final RecaptchaSolver wrongRecaptchaSolver = new RecaptchaSolver() {
+	private static final CaptchaSolver wrongRecaptchaSolver = new CaptchaSolver() {
 		@Override
-		public String solve(String challenge) {
+		public String solve(String imageUrl) {
 			return "123 456";
 		}
 	};
-	private static final RecaptchaSolver manualRecaptchaSolver = new ManualRecaptchaSolver(recaptcha);
+	private static final CaptchaSolver manualRecaptchaSolver = new ManualCaptchaSolver();
 	
 	@Test
 	public void testLoginWrongCaptcha() throws Exception {
